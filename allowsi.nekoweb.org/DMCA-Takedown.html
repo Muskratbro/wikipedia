@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DMCA Takedown - Allowsi</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#0f1728; --muted:#9aa4b2; --accent:#4cafef; --danger:#e74c3c;
+    --card:#0e1620; --glass: rgba(255,255,255,0.03);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  body{margin:0;background:linear-gradient(180deg,#071021 0%, #0b1830 100%);color:#e6eef6;min-height:100vh}
+  .wrap{max-width:980px;margin:28px auto;padding:20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  h1{font-size:20px;margin:0}
+  p.lead{color:var(--muted);margin:6px 0 18px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  .card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 6px 24px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.02)}
+  label{display:block;font-size:13px;margin-bottom:6px;color:#cfe6ff}
+  input[type="text"], input[type="email"], textarea, select {
+    width:100%; padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;
+    outline:none; font-size:14px;
+  }
+  textarea{min-height:120px; resize:vertical}
+  .row{display:flex;gap:12px}
+  .row > *{flex:1}
+  .small{font-size:13px;color:var(--muted)}
+  button{background:var(--accent);color:#072035;border:0;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+  .secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .danger{background:var(--danger);color:white}
+  pre.template{background:#071826;padding:12px;border-radius:8px;color:#dff3ff;overflow:auto;font-size:13px}
+  details{background:transparent;border-radius:8px;padding:8px}
+  summary{cursor:pointer;font-weight:600}
+  footer{margin-top:18px;color:var(--muted);font-size:13px}
+  .flex{display:flex;gap:8px;align-items:center}
+  @media(min-width:860px){ .grid{grid-template-columns: 1fr 420px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>DMCA Takedown / Copyright Infringement</h1>
+      <p class="lead">Use this form to submit a DMCA takedown notice for copyrighted material on Allowsi. Read the instructions below — incomplete notices may be rejected.</p>
+    </div>
+    <div class="small">Need help? Contact: <strong id="owner-email">muskratbro@proton.me</strong></div>
+  </header>
+
+  <div class="grid">
+    <!-- form column -->
+    <div class="card">
+      <h2 style="margin:0 0 10px">Submit a Takedown Notice</h2>
+      <p class="small">This form creates a prefilled email in your default email client. It does not send the notice for you. If you prefer, copy the notice text below into your own email and send to the address above.</p>
+
+      <form id="dmcaForm" onsubmit="buildMail(event)">
+        <label for="complainant-name">Your full name <span class="small">(required)</span></label>
+        <input id="complainant-name" name="name" type="text" required placeholder="Jane Doe">
+
+        <label for="complainant-email">Your email <span class="small">(required)</span></label>
+        <input id="complainant-email" name="email" type="email" required placeholder="you@example.com">
+
+        <label for="complainant-phone">Phone <span class="small">(optional)</span></label>
+        <input id="complainant-phone" name="phone" type="text" placeholder="+1 555 555 5555">
+
+        <label for="copyrighted-work">Description of copyrighted work(s) <span class="small">(required)</span></label>
+        <textarea id="copyrighted-work" name="work" required placeholder="Explain what was copied (title, registration number if available, description)"></textarea>
+
+        <label for="infringing-url">Where the infringing material appears on our site (URLs) <span class="small">(required — list one URL per line)</span></label>
+        <textarea id="infringing-url" name="location" required placeholder="https://allowsi.example/path/to/page"></textarea>
+
+        <label for="proof-url">URL(s) showing original/authorized content <span class="small">(optional)</span></label>
+        <input id="proof-url" name="proof" type="text" placeholder="https://publisher.example/original">
+
+        <label for="declaration">Declaration & signature <span class="small">(required)</span></label>
+        <textarea id="declaration" name="declaration" required>
+I have a good faith belief that use of the copyrighted material described above on the site is not authorized by the copyright owner, its agent, or the law. I declare under penalty of perjury that the information in this notice is accurate and that I am the copyright owner or authorized to act on the owner's behalf.
+Signature (type your full name): 
+        </textarea>
+
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="submit">Open email client (prefill)</button>
+          <button type="button" class="secondary" onclick="copyNotice()">Copy notice to clipboard</button>
+        </div>
+        <p class="small" style="margin-top:10px">We will acknowledge receipt and begin our review within 3 business days. If we remove content, we will notify the uploader and provide instructions for a counter-notice.</p>
+      </form>
+    </div>
+
+    <!-- instructions + templates -->
+    <aside class="card">
+      <h3 style="margin-top:0">What we need (required for a valid DMCA notice)</h3>
+      <ul class="small">
+        <li><strong>Your contact information:</strong> name, email, phone (optional)</li>
+        <li><strong>Identify the copyrighted work:</strong> title / registration / description</li>
+        <li><strong>Identify where the infringing material is hosted on our site:</strong> one or more exact URLs</li>
+        <li><strong>A statement of good faith:</strong> "I have a good faith belief..."</li>
+        <li><strong>Signature:</strong> typed full name (counts as signature)</li>
+      </ul>
+
+      <details style="margin-top:12px">
+        <summary>DMCA Takedown Notice Template (copy / use)</summary>
+        <pre class="template" id="takedown-template">
+To: muskratbro@proton.me
+Subject: DMCA Takedown Notice: [Short description]
+
+1) I am the copyright owner (or authorized to act on the owner's behalf) of certain copyrighted works that I believe are being infringed on your site.
+
+2) Description of copyrighted work(s):
+   - Title: [title or description]
+   - Registration number (if available): [optional]
+
+3) Location of the infringing material on your site (exact URLs):
+   - https://your-site.example/path/to/infringing-page
+   - [add more lines if needed]
+
+4) Location of an authorized copy (if available):
+   - https://original.example/path
+
+5) Statement of good faith:
+   I have a good faith belief that use of the copyrighted material described above on the site is not authorized by the copyright owner, its agent, or the law.
+
+6) Declaration (penalty of perjury):
+   I swear under penalty of perjury that the information in this notice is accurate and that I am the copyright owner or authorized to act on the owner's behalf.
+
+7) Signature (type full name):
+   [Your full legal name]
+
+Contact email: [your.email@example.com]
+Contact phone (optional): [phone number]
+        </pre>
+      </details>
+
+      <details style="margin-top:12px">
+        <summary>Counter-Notice Template (if you are the uploader)</summary>
+        <pre class="template" id="counter-template">
+To: muskratbro@proton.me
+Subject: DMCA Counter-Notice: [Short description]
+
+1) I am the uploader or an agent of the uploader of the material removed or disabled.
+
+2) I consent to the jurisdiction of the federal district court for the judicial district in which my address is located (or, if outside the United States, I consent to jurisdiction in the U.S. district court).
+
+3) I will accept service of process from the person who provided the original DMCA notice.
+
+4) I swear, under penalty of perjury, that I have a good faith belief that the material was removed or disabled as a result of mistake or misidentification.
+
+5) Please restore the material at:
+   - https://your-site.example/path/to/content
+
+Signature (type full legal name):
+Date:
+Contact email:
+Phone (optional):
+        </pre>
+      </details>
+
+      <h4 style="margin-top:12px">Owner handling process (what we do)</h4>
+      <ol class="small">
+        <li>We review the notice for completeness within 3 business days.</li>
+        <li>If valid, we remove or disable access to the content and notify the uploader.</li>
+        <li>We provide the uploader with the takedown details and instructions for filing a counter-notice.</li>
+        <li>If a counter-notice is received, we follow statutory steps (may restore content after 10–14 business days unless owner files suit).</li>
+      </ol>
+
+      <p class="small" style="margin-top:8px"><strong>Privacy:</strong> We will only use the information in your notice to process the claim and notify the uploader. Do not include sensitive personal data beyond what’s required. For legal advice, consult an attorney.</p>
+    </aside>
+  </div>
+
+  <footer class="card" style="margin-top:18px">
+    <p class="small">Questions? Email <strong>muskratbro@proton.me</strong>. This page is a procedural convenience and does not constitute legal advice.</p>
+  </footer>
+</div>
+
+<script>
+/* Replace this address before publishing */
+const DMCA_EMAIL = "YOUR-DMCA-EMAIL@yourdomain.tld";
+
+/* Build mailto link from form fields */
+function buildMail(e){
+  e.preventDefault();
+  const name = document.getElementById('complainant-name').value.trim();
+  const email = document.getElementById('complainant-email').value.trim();
+  const phone = document.getElementById('complainant-phone').value.trim();
+  const work = document.getElementById('copyrighted-work').value.trim();
+  const locations = document.getElementById('infringing-url').value.trim();
+  const proof = document.getElementById('proof-url').value.trim();
+  const declaration = document.getElementById('declaration').value.trim();
+
+  if(!name || !email || !work || !locations || !declaration){
+    alert('Please fill in the required fields (name, email, work description, infringing URL(s), declaration).');
+    return;
+  }
+
+  const subject = encodeURIComponent('DMCA Takedown Notice');
+  const bodyParts = [
+    `Name: ${name}`,
+    `Email: ${email}`,
+    `Phone: ${phone || '(not provided)'}`,
+    '',
+    '--- Description of copyrighted work ---',
+    work,
+    '',
+    '--- Location(s) of infringing material on our site ---',
+    locations,
+    '',
+    proof ? `--- Location of authorized copy ---\n${proof}\n` : '',
+    '--- Declaration ---',
+    declaration,
+    '',
+    'I declare under penalty of perjury that the foregoing is true and correct.',
+    '',
+    `Signature: ${name}`
+  ];
+  const body = encodeURIComponent(bodyParts.join('\\n'));
+
+  const mailto = `mailto:${DMCA_EMAIL}?subject=${subject}&body=${body}`;
+  // open user's email client
+  window.location.href = mailto;
+}
+
+/* copy the template text to clipboard */
+function copyNotice(){
+  const template = document.getElementById('takedown-template').innerText;
+  navigator.clipboard && navigator.clipboard.writeText(template).then(()=> {
+    alert('Takedown template copied to clipboard.');
+  }).catch(()=> {
+    alert('Could not copy automatically — please select and copy the template manually.');
+  });
+}
+
+/* Put the actual email address in the page (user must replace DMCA_EMAIL variable too) */
+document.getElementById('owner-email').textContent = DMCA_EMAIL;
+document.getElementById('takedown-template').textContent =
+`To: ${muskratbro@proton.me}
+Subject: DMCA Takedown Notice: [Short description]
+
+1) I am the copyright owner (or authorized to act on the owner's behalf) of certain copyrighted works that I believe are being infringed on your site.
+
+2) Description of copyrighted work(s):
+   - Title: [title or description]
+   - Registration number (if available): [optional]
+
+3) Location of the infringing material on your site (exact URLs):
+   - https://your-site.example/path/to/infringing-page
+   - [add more lines if needed]
+
+4) Location of an authorized copy (if available):
+   - https://original.example/path
+
+5) Statement of good faith:
+   I have a good faith belief that use of the copyrighted material described above on the site is not authorized by the copyright owner, its agent, or the law.
+
+6) Declaration (penalty of perjury):
+   I swear under penalty of perjury that the information in this notice is accurate and that I am the copyright owner or authorized to act on the owner's behalf.
+
+7) Signature (type full name):
+   [Your full legal name]
+
+Contact email: [your.email@example.com]
+Contact phone (optional): [phone number]`;
+
+document.getElementById('counter-template').textContent =
+`To: ${muskratbro@proton.me}
+Subject: DMCA Counter-Notice: [Short description]
+
+1) I am the uploader or an agent of the uploader of the material removed or disabled.
+
+2) I consent to the jurisdiction of the federal district court for the judicial district in which my address is located (or, if outside the United States, I consent to jurisdiction in the U.S. district court).
+
+3) I will accept service of process from the person who provided the original DMCA notice.
+
+4) I swear, under penalty of perjury, that I have a good faith belief that the material was removed or disabled as a result of mistake or misidentification.
+
+5) Please restore the material at:
+   - https://your-site.example/path/to/content
+
+Signature (type full legal name):
+Date:
+Contact email:
+Phone (optional):`;
+
+</script>
+</body>
+</html>

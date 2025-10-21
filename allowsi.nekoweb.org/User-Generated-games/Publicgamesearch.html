@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Allowsi Game Links</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #3a3a5c);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 { margin-bottom: 20px; font-size: 2.5em; text-align: center; text-shadow: 2px 2px 5px #000; }
+    h2 { margin-top: 40px; font-size: 1.8em; text-align: center; text-shadow: 1px 1px 3px #000; }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+      background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    form input { width: 90%; padding: 10px 15px; margin: 8px 0; border-radius: 10px; border: none; font-size: 1em; }
+    form button { padding: 12px 20px; margin-top: 10px; border: none; border-radius: 10px; font-size: 1.1em; background: #0af; color: #fff; cursor: pointer; transition: 0.3s; }
+    form button:hover { background: #08c; }
+
+    #linkList { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; width: 100%; max-width: 900px; }
+
+    button.game-btn {
+      background: linear-gradient(135deg, #ff6b6b, #f06595);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: 0.3s;
+    }
+    button.game-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+
+    .like-container { text-align: center; margin-top: 4px; font-size: 14px; }
+    button.like-btn { margin-top: 4px; padding: 4px 8px; border-radius: 8px; border: none; cursor: pointer; background: #ff4757; color: #fff; }
+
+    @media (max-width: 600px) {
+      form input, form button { width: 100%; }
+      button.game-btn { width: 90%; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Allowsi Game Links</h1>
+
+  <form id="linkForm">
+    <input type="text" id="title" placeholder="Game Title" required>
+    <input type="url" id="url" placeholder="Game URL" required>
+    <input type="text" id="submitted_by" placeholder="Your Name (optional)">
+    <button type="submit">Submit</button>
+  </form>
+
+  <h2>Approved Games</h2>
+  <div id="linkList">Loading...</div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://zsuirwfcmrsmmxinikmw.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzdWlyd2ZjbXJzbW14aW5pa213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5MjA3NDgsImV4cCI6MjA3NDQ5Njc0OH0.BUn_aJK3Bf2SYYjtfIwoceeI-X6eflaVm15PgO-qcxM"
+    );
+
+    const form = document.getElementById("linkForm");
+    const list = document.getElementById("linkList");
+
+    // Generate persistent visitor ID
+    let visitorId = localStorage.getItem("visitorId");
+    if (!visitorId) {
+      visitorId = crypto.randomUUID();
+      localStorage.setItem("visitorId", visitorId);
+    }
+
+    // Submit form
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const url = document.getElementById("url").value;
+      const submitted_by = document.getElementById("submitted_by").value;
+
+      const { error } = await supabase.from("links").insert([{ title, url, submitted_by }]);
+      if (error) alert("Error submitting link: " + error.message);
+      else { alert("Thanks! Your link is pending approval."); form.reset(); loadLinks(); }
+    });
+
+    async function loadLinks() {
+      list.innerHTML = "Loading...";
+
+      // 1️⃣ fetch approved links
+      const { data: links, error } = await supabase
+        .from("links")
+        .select("*")
+        .eq("status","approved");
+
+      if (error) return console.error(error);
+      if (!links || links.length === 0) {
+        list.innerHTML = "<p>No approved games yet.</p>";
+        return;
+      }
+
+      // 2️⃣ fetch all likes for these links
+      const linkIds = links.map(l => l.id);
+      const { data: likesData } = await supabase
+        .from("likes")
+        .select("*")
+        .in("link_id", linkIds);
+
+      // 3️⃣ compute total likes and visitor likes
+      const likesCountMap = {};
+      const visitorLikedSet = new Set();
+
+      likesData.forEach(like => {
+        likesCountMap[like.link_id] = (likesCountMap[like.link_id] || 0) + 1;
+        if (like.visitor_id === visitorId) visitorLikedSet.add(like.link_id);
+      });
+
+      // 4️⃣ sort links by total likes descending
+      links.sort((a,b) => (likesCountMap[b.id] || 0) - (likesCountMap[a.id] || 0));
+
+      // 5️⃣ render
+      list.innerHTML = "";
+      for (let link of links) {
+        const container = document.createElement("div");
+        container.style.textAlign = "center";
+        container.style.margin = "10px";
+
+        const btn = document.createElement("button");
+        btn.className = "game-btn";
+        btn.textContent = link.title || link.url;
+        btn.onclick = () => {
+          const urlParam = encodeURIComponent(link.url);
+          const titleParam = encodeURIComponent(link.title || "");
+          window.location.href = `gameviewer.html?url=${urlParam}&title=${titleParam}`;
+        };
+
+        const likesSpan = document.createElement("div");
+        likesSpan.className = "like-container";
+        likesSpan.textContent = `❤️ ${likesCountMap[link.id] || 0}`;
+
+        const likeBtn = document.createElement("button");
+        likeBtn.className = "like-btn";
+
+        if (visitorLikedSet.has(link.id)) {
+          likeBtn.textContent = "Liked ❤️";
+          likeBtn.disabled = true;
+        } else {
+          likeBtn.textContent = "Like ❤️";
+        }
+
+        likeBtn.onclick = async () => {
+          try {
+            const { error } = await supabase.from("likes").insert({ visitor_id: visitorId, link_id: link.id });
+            if (!error) {
+              likesCountMap[link.id] = (likesCountMap[link.id] || 0) + 1;
+              likesSpan.textContent = `❤️ ${likesCountMap[link.id]}`;
+              likeBtn.textContent = "Liked ❤️";
+              likeBtn.disabled = true;
+              loadLinks(); // re-sort after like
+            } else {
+              alert("You already liked this game!");
+            }
+          } catch(e) { console.error(e); }
+        };
+
+        container.appendChild(btn);
+        container.appendChild(likesSpan);
+        container.appendChild(likeBtn);
+
+        list.appendChild(container);
+      }
+    }
+
+    loadLinks();
+  </script>
+</body>
+</html>

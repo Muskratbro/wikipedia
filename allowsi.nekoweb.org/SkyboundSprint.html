@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Skybound Sprint</title>
+  <style>
+    body {
+      margin: 0;
+      background: #87ceeb;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #222;
+      display: block;
+      image-rendering: pixelated;
+      border: 2px solid black;
+    }
+  </style>
+</head>
+<body>
+<canvas id="game" width="400" height="600"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const gravity = 0.6;
+const platformHeight = 15;
+const platformWidth = 80;
+const platformGapMin = 50;
+const platformGapMax = 120;
+const laserSpeed = 10;
+
+const player = {
+  x: 180,
+  y: 500,
+  width: 20,
+  height: 40,
+  dx: 0,
+  dy: 0,
+  speed: 5,
+  jumping: false,
+  grounded: false,
+};
+
+let cameraY = 0;
+let platforms = [];
+let flyingEnemies = [];
+let lasers = [];
+let score = 0;
+let gameState = "menu";
+
+function drawPlayer(x, y) {
+  const size = 10;
+  const yOffset = -30;
+  ctx.fillStyle = '#fcd7b0';
+  ctx.fillRect(x, y + yOffset, size * 2, size * 2);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x + size * 0.4, y + size * 0.7 + yOffset, size * 0.3, size * 0.3);
+  ctx.fillRect(x + size * 1.3, y + size * 0.7 + yOffset, size * 0.3, size * 0.3);
+  ctx.fillStyle = '#0077cc';
+  ctx.fillRect(x, y + size * 2 + yOffset, size * 2, size * 3);
+  ctx.fillStyle = '#333';
+  ctx.fillRect(x, y + size * 5 + yOffset, size, size * 2);
+  ctx.fillRect(x + size, y + size * 5 + yOffset, size, size * 2);
+}
+
+function drawSky() {
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#87ceeb');
+  gradient.addColorStop(1, '#fff');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawPlatforms() {
+  for (const plat of platforms) {
+    ctx.fillStyle = plat.type === 'cracked' ? '#a0522d' : '#654321';
+    ctx.fillRect(plat.x, plat.y + cameraY, plat.width, platformHeight);
+  }
+}
+
+function drawFlyingEnemies() {
+  for (const enemy of flyingEnemies) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(enemy.x, enemy.y + cameraY, 20, 20);
+  }
+}
+
+function drawLasers() {
+  ctx.fillStyle = 'yellow';
+  for (const laser of lasers) {
+    ctx.fillRect(laser.x, laser.y + cameraY, laser.width, laser.height);
+  }
+}
+
+function drawScore() {
+  ctx.fillStyle = '#000';
+  ctx.font = '20px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('Score: ' + score, 10, 30);
+}
+
+function createInitialPlatforms() {
+  platforms = [];
+  flyingEnemies = [];
+  lasers = [];
+  let y = canvas.height - platformHeight;
+  for (let i = 0; i < 20; i++) {
+    let x = Math.random() * (canvas.width - platformWidth);
+    const isCracked = Math.random() < 0.2; // 20% chance cracked
+    platforms.push({ x, y, width: platformWidth, height: platformHeight, type: isCracked ? 'cracked' : 'normal', used: false });
+    if (i % 5 === 0) {
+      const side = Math.random() < 0.5 ? 'left' : 'right';
+      const enemyX = side === 'right' ? canvas.width + 10 : -30;
+      flyingEnemies.push({ x: enemyX, y: y - 20, cooldown: 100, side });
+    }
+    y -= platformGapMin + Math.random() * (platformGapMax - platformGapMin);
+  }
+}
+
+function resetGame() {
+  createInitialPlatforms();
+  const lowest = platforms.reduce((a, b) => (a.y > b.y ? a : b));
+  player.x = lowest.x + lowest.width / 2 - player.width / 2;
+  player.y = lowest.y - player.height;
+  player.dx = 0;
+  player.dy = 0;
+  player.jumping = false;
+  player.grounded = false;
+  cameraY = 0;
+  score = 0;
+}
+
+function updateEnemies() {
+  for (const enemy of flyingEnemies) {
+    enemy.cooldown--;
+    if (enemy.cooldown <= 0) {
+      const isRight = enemy.side === 'right';
+      lasers.push({
+        x: isRight ? enemy.x - 10 : enemy.x + 20,
+        y: enemy.y,
+        width: 10,
+        height: 4,
+        dx: isRight ? -laserSpeed : laserSpeed,
+      });
+      enemy.cooldown = 100 + Math.random() * 100;
+    }
+  }
+
+  for (let i = lasers.length - 1; i >= 0; i--) {
+    lasers[i].x += lasers[i].dx;
+    if (lasers[i].x < -20 || lasers[i].x > canvas.width + 20) {
+      lasers.splice(i, 1);
+    }
+  }
+}
+
+function checkLaserHit() {
+  for (const laser of lasers) {
+    if (
+      player.x < laser.x + laser.width &&
+      player.x + player.width > laser.x &&
+      player.y < laser.y + laser.height + cameraY &&
+      player.y + player.height > laser.y + cameraY
+    ) {
+      gameState = "menu";
+    }
+  }
+}
+
+function update() {
+  if (gameState !== "playing") return;
+
+  if (keys['ArrowLeft'] || keys['KeyA']) player.dx = -player.speed;
+  else if (keys['ArrowRight'] || keys['KeyD']) player.dx = player.speed;
+  else player.dx = 0;
+
+  if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && !player.jumping) {
+    player.dy = -15;
+    player.jumping = true;
+  }
+
+  player.dy += gravity;
+  player.dy = Math.min(player.dy, 20);
+  player.y += player.dy;
+  player.grounded = false;
+
+  for (let i = platforms.length - 1; i >= 0; i--) {
+    const plat = platforms[i];
+    if (
+      player.x < plat.x + plat.width &&
+      player.x + player.width > plat.x &&
+      player.y + player.height > plat.y + cameraY &&
+      player.y + player.height <= plat.y + cameraY + player.dy
+    ) {
+      player.y = plat.y + cameraY - player.height;
+      player.dy = 0;
+      player.jumping = false;
+      player.grounded = true;
+
+      if (plat.type === 'cracked' && !plat.used) {
+        plat.used = true;
+        setTimeout(() => {
+          platforms.splice(i, 1);
+        }, 300);
+      }
+    }
+  }
+
+  player.x += player.dx;
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+  const threshold = canvas.height / 3;
+  if (player.y < threshold) {
+    const diff = threshold - player.y;
+    cameraY += diff;
+    player.y = threshold;
+  }
+
+  platforms = platforms.filter(p => p.y + cameraY < canvas.height + 100);
+  let highestY = platforms.reduce((min, p) => (p.y < min ? p.y : min), Infinity);
+  while (highestY + cameraY > -100) {
+    let newY = highestY - (platformGapMin + Math.random() * (platformGapMax - platformGapMin));
+    let newX = Math.random() * (canvas.width - platformWidth);
+    const isCracked = Math.random() < 0.2;
+    platforms.push({ x: newX, y: newY, width: platformWidth, height: platformHeight, type: isCracked ? 'cracked' : 'normal', used: false });
+    if (Math.floor(Math.random() * 5) === 0) {
+      const side = Math.random() < 0.5 ? 'left' : 'right';
+      const enemyX = side === 'right' ? canvas.width + 10 : -30;
+      flyingEnemies.push({ x: enemyX, y: newY - 20, cooldown: 100, side });
+    }
+    highestY = newY;
+  }
+
+  updateEnemies();
+  checkLaserHit();
+
+  let heightScore = Math.floor(Math.max(0, canvas.height - player.y + cameraY));
+  if (heightScore > score) score = heightScore;
+
+  if (player.y > canvas.height) gameState = "menu";
+}
+
+function drawMenu() {
+  drawSky();
+  ctx.fillStyle = '#fff';
+  ctx.font = '40px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText("Skybound Sprint", canvas.width / 2, 150);
+
+  const btnX = canvas.width / 2 - 70;
+  const btnY = 300;
+  const btnW = 140;
+  const btnH = 60;
+  ctx.fillStyle = '#00cc66';
+  ctx.fillRect(btnX, btnY, btnW, btnH);
+  ctx.fillStyle = '#fff';
+  ctx.font = '30px monospace';
+  ctx.fillText("PLAY", canvas.width / 2, btnY + 40);
+}
+
+canvas.addEventListener('click', (e) => {
+  if (gameState !== "menu") return;
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+  const btnX = canvas.width / 2 - 70;
+  const btnY = 300;
+  const btnW = 140;
+  const btnH = 60;
+  if (clickX >= btnX && clickX <= btnX + btnW &&
+      clickY >= btnY && clickY <= btnY + btnH) {
+    gameState = "playing";
+    resetGame();
+  }
+});
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+function gameLoop() {
+  if (gameState === "menu") {
+    drawMenu();
+  } else if (gameState === "playing") {
+    update();
+    drawSky();
+    drawPlatforms();
+    drawFlyingEnemies();
+    drawLasers();
+    drawPlayer(player.x, player.y);
+    drawScore();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
