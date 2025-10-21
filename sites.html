@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Webhost</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0d0d0d;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 { margin: 20px 0; }
+    form, .uploader, iframe { margin: 20px auto; width: 90%; max-width: 600px; }
+    input, button { padding: 10px; margin: 5px; border: none; border-radius: 6px; }
+    input[type="file"] { background: #222; color: #ddd; }
+    button { background: #29a; color: white; cursor: pointer; }
+    iframe { width: 100%; height: 70vh; border: none; background: white; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Mini Webhost</h1>
+
+  <!-- Login / Sign-up form -->
+  <div id="auth">
+    <form id="loginForm">
+      <input id="email" type="email" placeholder="Email" required><br>
+      <input id="password" type="password" placeholder="Password" required><br>
+      <button type="submit">Log In / Sign Up</button>
+    </form>
+  </div>
+
+  <!-- File uploader -->
+  <div class="uploader" style="display:none">
+    <h2>Upload your site files</h2>
+    <input type="file" id="fileInput" multiple><br>
+    <button id="uploadBtn">Upload</button><br>
+    <p>Preview: <span id="previewLink"></span></p>
+  </div>
+
+  <!-- Preview iframe -->
+  <iframe id="previewFrame"></iframe>
+
+  <!-- Supabase JS -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+    // 🔑 Replace these with your actual project info
+    const SUPABASE_URL = "https://zsuirwfcmrsmmxinikmw.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzdWlyd2ZjbXJzbW14aW5pa213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5MjA3NDgsImV4cCI6MjA3NDQ5Njc0OH0.BUn_aJK3Bf2SYYjtfIwoceeI-X6eflaVm15PgO-qcxM";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const loginForm = document.getElementById("loginForm");
+    const uploader = document.querySelector(".uploader");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const previewLink = document.getElementById("previewLink");
+    const previewFrame = document.getElementById("previewFrame");
+
+    let user = null;
+
+    // 🔐 Log in or sign up
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const emailField = document.getElementById("email");
+      const passField = document.getElementById("password");
+      const email = emailField.value;
+      const password = passField.value;
+
+      let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error && error.message.includes("Invalid login credentials")) {
+        ({ data, error } = await supabase.auth.signUp({ email, password }));
+      }
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      user = data.user;
+      loginForm.style.display = "none";
+      uploader.style.display = "block";
+    });
+
+    // ⬆️ Upload files to Supabase Storage
+    uploadBtn.addEventListener("click", async () => {
+      if (!fileInput.files.length) return alert("Select at least one file");
+
+      const username = user.email.split("@")[0]; // simple username from email
+      for (const file of fileInput.files) {
+        const path = `${username}/${file.name}`; // ✅ no leading slash
+        const { error } = await supabase.storage
+          .from("sites")
+          .upload(path, file, { upsert: true }); // overwrite if exists
+        if (error) console.error("Upload error:", error.message);
+      }
+
+      const viewUrl = `https://allowsi.nekoweb.org/view?user=${username}`;
+      previewLink.innerHTML = `<a href="${viewUrl}" target="_blank">${viewUrl}</a>`;
+      previewFrame.src = `${SUPABASE_URL}/storage/v1/object/public/sites/${username}/index.html`;
+      previewFrame.style.display = "block";
+    });
+  </script>
+</body>
+</html>

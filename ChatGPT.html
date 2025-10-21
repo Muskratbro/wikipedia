@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot</title>
+  <style>
+    body {
+      font-family: Meowy
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #chat {
+      flex: 1;
+      padding: 1em;
+      overflow-y: auto;
+      background: #f4f4f4;
+    }
+    .msg {
+      margin-bottom: 1em;
+    }
+    .user { color: blue; }
+    .bot { color: green; }
+    .error { color: red; font-style: italic; }
+    #inputBox {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    #inputBox input {
+      flex: 1;
+      padding: 1em;
+      font-size: 1em;
+      border: none;
+    }
+    #inputBox button {
+      padding: 1em;
+      font-size: 1em;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <div id="inputBox">
+    <input type="text" id="userInput" placeholder="Say something...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat');
+    const input = document.getElementById('userInput');
+    const apiKey = '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';
+
+    let messages = [
+      { role: "system", content: "You are Dave, a helpful and humble chatbot who never refers to yourself as ChatGPT. You respond with a straightforward yet helpful tone. Except when someone sas something unkind then you get mad!" }
+    ];
+
+    function appendMessage(role, text) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${role}`;
+      msg.textContent = `${role === 'user' ? 'You' : 'Bot'}: ${text}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function appendError(text) {
+      const msg = document.createElement('div');
+      msg.className = 'msg error';
+      msg.textContent = `Error: ${text}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userMessage = input.value;
+      if (!userMessage.trim()) return;
+      appendMessage('user', userMessage);
+      messages.push({ role: "user", content: userMessage });
+      input.value = '';
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini", // OpenAI doesn't officially name models "Mini 40" — ensure this model is what you intend
+            messages: messages
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          appendError(data.error.message);
+          return;
+        }
+
+        const botReply = data.choices?.[0]?.message?.content || "(no response)";
+        messages.push({ role: "assistant", content: botReply });
+        appendMessage('bot', botReply);
+
+      } catch (err) {
+        appendError("Failed to reach OpenAI API. Check your API key or network.");
+      }
+    }
+  </script>
+</body>
+</html>
