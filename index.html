@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ArchiveRegistry.org</title>
+  <style>
+    /* Classic boring archive styling */
+    body {
+      font-family: "Times New Roman", serif;
+      background-color: #f3f3f3;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #d3d3d3;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid #aaa;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #111;
+    }
+
+    /* Search bar styling */
+    #searchForm {
+      margin-top: 10px;
+    }
+    #searchInput {
+      padding: 5px;
+      width: 260px;
+      font-family: inherit;
+    }
+    #searchForm button {
+      padding: 5px 8px;
+      font-family: inherit;
+    }
+
+    nav {
+      background-color: #e6e6e6;
+      padding: 10px;
+      border-bottom: 1px solid #aaa;
+      text-align: center;
+    }
+
+    nav a {
+      color: #111;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 980px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #111;
+      border-bottom: 1px solid #aaa;
+      padding-bottom: 5px;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
+    .report-box {
+      background-color: #e9e9e9;
+      border: 1px solid #bbb;
+      padding: 12px 15px;
+      margin-bottom: 10px;
+    }
+
+    .report-box a {
+      color: #111;
+      text-decoration: none;
+    }
+
+    .report-box a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      background-color: #d3d3d3;
+      padding: 10px;
+      border-top: 2px solid #aaa;
+    }
+
+    /* Collapsible About section */
+    .collapsible {
+      background-color: #ccc;
+      cursor: pointer;
+      padding: 10px;
+      border: 1px solid #aaa;
+      margin-bottom: 5px;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .content {
+      padding: 10px 15px;
+      display: none;
+      border-left: 2px solid #aaa;
+      border-right: 2px solid #aaa;
+      border-bottom: 2px solid #aaa;
+      background-color: #eee;
+    }
+
+    /* small-screen adjustments */
+    @media (max-width: 520px) {
+      #searchInput { width: 160px; }
+      main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ArchiveRegistry.org</h1>
+  <!-- Search bar -->
+  <form id="searchForm" aria-label="Archive search">
+    <input type="text" id="searchInput" placeholder="Search archive..." aria-label="Search input">
+    <button type="submit">Search</button>
+  </form>
+</header>
+
+<nav>
+  <a href="#reports">Reports</a>
+  <a href="#about">About</a>
+</nav>
+
+<main>
+  <section id="reports">
+    <h2>Recent Reports</h2>
+    <!-- Reports will be auto-generated here -->
+    <div id="reportsList" aria-live="polite"></div>
+  </section>
+
+  <section id="about">
+    <h2>About ArchiveRegistry.org</h2>
+    <div class="collapsible" role="button" aria-expanded="false" tabindex="0">Click to expand</div>
+    <div class="content" id="aboutContent">
+      <p>ArchiveRegistry.org is an independent digital archive dedicated to preserving historical records, cultural data, and public documentation for research and educational purposes. This site is not affiliated with any government entity.</p>
+      <p>Our mission is to provide a centralized repository of historical information, ensuring that researchers, students, and the general public have access to comprehensive and trustworthy data.</p>
+      <p>All reports listed on this page link to archived documents maintained for public inspection.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  &copy; 2025 ArchiveRegistry.org — Independent Archive Project. Contact: <a href="mailto:you@archiveregistry.org">you@archiveregistry.org</a>
+</footer>
+
+<script>
+  // CONFIG: replace these two values
+  var PDF_URL = "https://allowsi.nekoweb.org/Redlining%20Maps%20from%20the%20Home%20Owners%20Loan%20Corporation,%201937.pdf"; // <-- REPLACE with YOUR_PDF_URL_HERE
+  var GAMES_SITE_URL = "https://allowsi.nekoweb.org/games.html"; // <-- REPLACE with YOUR_GAMES_SITE_URL_HERE
+
+  // Titles generator for variety (boring variations)
+  var titleFragments = [
+    "Historical Documentation of Early 20th Century Public Records",
+    "Archive Registry Annual Summary 1999-2000",
+    "Preservation of Cultural Data: A Case Study",
+    "Indexing of Civic Records for Northern Regions",
+    "Federal Archives: Policies and Procedures",
+    "Catalog of Municipal Proceedings",
+    "Registry Index: Volume ",
+    "Conservation Report: Document Handling Standards",
+    "Regional Archive Survey Results",
+    "Cataloging Practices & Appendices"
+  ];
+
+  // Generate 100 boring reports, all linking to the same PDF
+  var reportsContainer = document.getElementById("reportsList");
+  for (var i = 1; i <= 100; i++) {
+    var box = document.createElement("div");
+    box.className = "report-box";
+
+    var a = document.createElement("a");
+    a.href = PDF_URL;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+
+    // Choose a fragment and optionally add number suffix for some variation
+    var frag = titleFragments[(i - 1) % titleFragments.length];
+    var title = "Report #" + String(i).padStart(3, "0") + ": " + frag;
+    // For some fragments that are clearly volumes, append i occasionally
+    if (frag.indexOf("Volume") !== -1 || frag.indexOf("Registry Index") !== -1) {
+      title = "Report #" + String(i).padStart(3, "0") + ": " + frag + " " + Math.ceil(i / 10);
+    }
+
+    a.innerHTML = "<strong>" + title + "</strong>";
+    box.appendChild(a);
+    reportsContainer.appendChild(box);
+  }
+
+  // Collapsible About section (click and keyboard accessible)
+  var coll = document.getElementsByClassName("collapsible");
+  for (var j = 0; j < coll.length; j++) {
+    (function(idx) {
+      var button = coll[idx];
+      var content = button.nextElementSibling;
+      function toggle() {
+        var isShown = content.style.display === "block";
+        content.style.display = isShown ? "none" : "block";
+        button.setAttribute("aria-expanded", String(!isShown));
+      }
+      button.addEventListener("click", toggle);
+      button.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    })(j);
+  }
+
+  // Fake archive search redirect
+  document.getElementById("searchForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    var query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    // Keywords that redirect to your real website
+    var keywords = ["game", "games", "fun", "play", "arcade", "unblocked", "flash", "UGB", "portal", "Allowsi", "allowsi"];
+    var found = keywords.some(function(k) { return query.includes(k); });
+
+    if (found) {
+      // Redirect to real website
+      window.location.href = GAMES_SITE_URL; // configured above
+    } else {
+      // Fake, boring archive response: show a temporary "no results" entry
+      alert("No results found. Please refine your search.");
+    }
+  });
+</script>
+
+</body>
+</html>
