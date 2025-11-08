@@ -167,7 +167,7 @@
 <script>
   // CONFIG: replace these two values
   var PDF_URL = "https://allowsi.nekoweb.org/Redlining%20Maps%20from%20the%20Home%20Owners%20Loan%20Corporation,%201937.pdf"; // <-- REPLACE with YOUR_PDF_URL_HERE
-  var GAMES_SITE_URL = "/games"; // <-- REPLACE with YOUR_GAMES_SITE_URL_HERE
+  var GAMES_SITE_URL = ""; // <-- REPLACE with YOUR_GAMES_SITE_URL_HERE
 
   // Titles generator for variety (boring variations)
   var titleFragments = [
@@ -239,7 +239,7 @@
 
     if (found) {
       // Redirect to real website
-      window.location.href = GAMES_SITE_URL; // configured above
+      window.location.href = "/games"; // configured above
     } else {
       // Fake, boring archive response: show a temporary "no results" entry
       alert("No results found. Please refine your search.");
