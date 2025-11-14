@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +33,29 @@
       text-decoration: none;
       margin: 0 10px;
       font-weight: bold;
+    }
+
+    /* New buttons section */
+    #game-buttons {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #game-buttons button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #444;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #game-buttons button:hover {
+      background: #666;
     }
 
     #game-container {
@@ -87,6 +109,24 @@
     <a href="/DMCA-Takedown.html">DMCA Takedown Procedure</a>
   </header>
 
+  <!-- 14 buttons for swapping game URLs -->
+  <div id="game-buttons">
+    <button data-url="https://example.com/game1">Game 1</button>
+    <button data-url="https://example.com/game2">Game 2</button>
+    <button data-url="https://example.com/game3">Game 3</button>
+    <button data-url="https://example.com/game4">Game 4</button>
+    <button data-url="https://example.com/game5">Game 5</button>
+    <button data-url="https://example.com/game6">Game 6</button>
+    <button data-url="https://example.com/game7">Game 7</button>
+    <button data-url="https://example.com/game8">Game 8</button>
+    <button data-url="https://example.com/game9">Game 9</button>
+    <button data-url="https://example.com/game10">Game 10</button>
+    <button data-url="https://example.com/game11">Game 11</button>
+    <button data-url="https://example.com/game12">Game 12</button>
+    <button data-url="https://example.com/game13">Game 13</button>
+    <button data-url="https://example.com/game14">Game 14</button>
+  </div>
+
   <div id="game-container">
     <embed id="game-frame" src="https://4yqt7wrhtx-ship-it.github.io/casual-games/papas-bake/">
     <button id="fullscreen-btn">⛶ Fullscreen</button>
@@ -97,7 +137,9 @@
     const gameContainer = document.getElementById("game-container");
     const fullscreenBtn = document.getElementById("fullscreen-btn");
     const aboutblankBtn = document.getElementById("aboutblank-btn");
+    const gameFrame = document.getElementById("game-frame");
 
+    // Fullscreen button
     fullscreenBtn.addEventListener("click", () => {
       if (gameContainer.requestFullscreen) {
         gameContainer.requestFullscreen();
@@ -108,6 +150,7 @@
       }
     });
 
+    // about:blank button
     aboutblankBtn.addEventListener("click", () => {
       const win = window.open("about:blank");
       const html = document.documentElement.outerHTML;
@@ -115,7 +158,16 @@
       win.document.write(html);
       win.document.close();
     });
+
+    // Game-switch buttons
+    document.getElementById("game-buttons").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        const url = e.target.getAttribute("data-url");
+        gameFrame.src = url;
+      }
+    });
   </script>
- <h2>Teachers cant see your screen in about:blank</h2>
+
+  <h2>Teachers cant see your screen in about:blank</h2>
 </body>
 </html>
